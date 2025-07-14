@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useContext, useCallback } from 'react';
 import { Button, Spinner } from 'react-bootstrap';
 import { WorkoutCard } from '../components/WorkoutCard';
 import { WorkoutForm } from '../components/WorkoutForm';
@@ -19,7 +19,9 @@ export const WorkoutsPage = () => {
     const [isLoading, setIsLoading] = useState(true);
     const { token } = useContext(AuthContext);
 
-    const fetchWorkouts = () => {
+    const fetchWorkouts = useCallback(() => {
+        if (!token) return;
+        
         setIsLoading(true);
         fetch('https://fitnesstrackappapi.onrender.com/workouts/getMyWorkouts', {
             headers: {
@@ -30,20 +32,19 @@ export const WorkoutsPage = () => {
         .then(data => {
             if (data.workouts) {
                 setWorkouts(data.workouts);
-                setIsLoading(false);
             }
         })
         .catch(error => {
             console.error('Error fetching workouts:', error);
+        })
+        .finally(() => {
             setIsLoading(false);
         });
-    };
+    }, [token]);
 
     useEffect(() => {
-        if (token) {
-            fetchWorkouts();
-        }
-    }, [token]);
+        fetchWorkouts();
+    }, [fetchWorkouts]);
 
     const handleSubmitWorkout = (workoutData) => {
         if (workoutData._id) {
